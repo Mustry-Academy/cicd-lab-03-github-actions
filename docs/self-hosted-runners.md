@@ -13,7 +13,7 @@ GitHub-hosted runners are fine for almost everything. You need self-hosted when 
 1. **Network isolation.** The thing you need to deploy to is behind a firewall. An on-prem Ignition gateway, a PLC network, a private database, an internal artifact registry — GitHub-hosted runners simply can't reach them.
 2. **Compliance / data residency.** Auditors require builds run on infrastructure your organization controls. Common in regulated industries (pharma, finance, defense).
 3. **Real hardware access.** Testing against a physical PLC, an OPC-UA server, a specific USB device, a particular OS configuration. GitHub-hosted runners are Linux/macOS/Windows VMs — they don't have your USB-attached serial debugger.
-4. **Cost at very high volume.** Sometimes — usually not for small teams. If you're running >10,000 minutes/month and your jobs are CPU-bound, self-hosted *might* be cheaper. Don't optimize for cost prematurely.
+4. **Cost at very high volume.** Sometimes — usually not for small teams. If you're running a very high volume of CI and your jobs are CPU-bound, self-hosted *might* be cheaper. Don't optimize for cost prematurely.
 
 If none of these apply, don't reach for self-hosted. The operational cost — maintaining a runner host, keeping the agent up to date, monitoring its disk — outweighs the convenience.
 
@@ -79,7 +79,7 @@ Various tooling (philips-labs/terraform-aws-github-runner, etc.) spins up a fres
 - **PATH and tools.** Your self-hosted runner doesn't have what `ubuntu-latest` has preinstalled. If your workflow assumes `shellcheck` is on the PATH, you need to install it on the runner host (or in the workflow).
 - **Disk fills up.** Long-lived runners accumulate Docker images, build artifacts, npm caches. Add a cleanup step or use ephemeral runners.
 - **Hangs.** A job that never returns will tie up the runner indefinitely. Always set timeouts (`timeout-minutes:` at job level).
-- **Token rotation.** Registration tokens expire after one hour. The *runner credential* (created from the registration token) is long-lived but tied to the runner's GUID. Re-registering creates a new runner; the old one lingers as "Offline."
+- **Token rotation.** Registration tokens are short-lived. The *runner credential* (created from the registration token) is long-lived but tied to the runner's GUID. Re-registering creates a new runner; the old one lingers as "Offline."
 
 ## Ignition-specific notes
 

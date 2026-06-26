@@ -208,7 +208,7 @@ docker run -d --rm \                              # detached, auto-clean on exit
   --name lab03-runner \                           # name for `docker logs`/`docker stop`
   -e REPO_URL="https://github.com/<user>/<repo>" \
   -e RUNNER_NAME="lab03-$(whoami)" \              # appears in the GitHub UI
-  -e RUNNER_TOKEN="$RUNNER_TOKEN" \               # registration token (≤1h lifetime)
+  -e RUNNER_TOKEN="$RUNNER_TOKEN" \               # registration token (short-lived)
   -e LABELS="self-hosted,local-lab03" \           # used by runs-on matching
   -e EPHEMERAL=true \                             # auto-terminate after one job
   -v /var/run/docker.sock:/var/run/docker.sock \  # so the job can use Docker
@@ -223,7 +223,7 @@ Docker over a mounted socket.
 
 - **Runner not picking up jobs** — is it running (`docker ps`)? do its labels match `runs-on:`?
   is it green in *Settings → Actions → Runners*?
-- **Registration token expired** — 1h lifetime; regenerate via `gh api -X POST .../registration-token`.
+- **Registration token expired** — they're short-lived; regenerate via `gh api -X POST .../registration-token`.
 - **shellcheck not installed on the runner** — expected; the image ships only what you put on it.
   GitHub-hosted runners have a lot preinstalled; yours doesn't. A good lesson, not a bug.
 - **Runner stops after one job** — expected with `EPHEMERAL=true`.
