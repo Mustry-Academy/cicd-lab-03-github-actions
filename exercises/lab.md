@@ -11,11 +11,16 @@ Actions workflow that makes those checks a required gate on every PR, then a loo
 > tracks only the project files under `projects/`; the gateway generates its own config
 > into a Docker volume we never commit. (Lab 04 goes deep on that file layout.)
 
+**What this lab is — and isn't.** Today you build the *safety net*: CI that catches problems
+in your project files before they ship. You won't deploy anything to a gateway yet —
+automated, file-based deployment is the subject of Labs 04–05. The goal here is to make
+"broken project files can't reach `main`" automatic.
+
 ## What you'll do
 
 - **Part 1 — Linters as your safety net:** yamllint, shellcheck, actionlint, **ign-lint**, `ops/validate.sh`
 - **Part 2 — GitHub Actions:** build `ci.yml`, path filters, required check
-- **Part 3 — Self-hosted runners:** when, why, how (demo + discussion)
+- **Part 3 — Self-hosted runners:** a look ahead (short demo) — hands-on comes in Labs 04–05
 
 ## Setup
 
@@ -72,8 +77,10 @@ run them all — it's to know which one would have caught yesterday's regression
 ops/seed.sh
 ```
 
-This plants **6 issues** into your working tree — one per tool, plus a second ign-lint
-finding. Hunt them down with the linters. Reset to a clean tree any time with:
+This plants a handful of issues into your working tree — at least one for every tool,
+including a couple of realistic Ignition findings in the Perspective view: a **brittle, broken
+binding** and a **runaway poll rate**. Hunt them down with the linters. Reset to a clean tree
+any time with:
 
 ```bash
 git restore . && rm -f .github/workflows/example.yml
@@ -235,9 +242,9 @@ typos, malformed environment maps.
 
 **4 — Required check.** In repo settings, configure branch protection on `main`: require a
 PR before merging, and require status checks — select **`lint`** and **`validate`**. Now
-introduce a lint failure — run `ops/seed.sh` to plant the broken state (or just rename a
-component to snake_case by hand) — commit it, and open a PR. Confirm GitHub blocks the
-merge. Fix and re-push.
+introduce a failure — run `ops/seed.sh` to plant the broken state (or just set the Clock's
+poll to `now(250)` by hand) — commit it, and open a PR. Confirm GitHub blocks the merge.
+Fix and re-push.
 
 **5 — Sanity check.** Commit any remaining changes. Your workflow should match the shipped
 [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) — see
@@ -261,52 +268,35 @@ merge. Fix and re-push.
 
 ---
 
-## Part 3 — Self-hosted runners: when, why, and how
+## Part 3 — Self-hosted runners (a look ahead)
 
-**Goal:** decide when GitHub-hosted isn't enough, understand the security model, and see a
-runner registered and routed end-to-end. (This part is a guided demo + discussion; the
-full hands-on is an optional take-home below.)
+The instructor closes with a short tour of self-hosted runners: what they are and when you'd
+reach for one. You'll get **hands-on** with them in Labs 04–05 — deploying to a real gateway
+usually means a runner that can reach it — so here we just establish the idea and the one rule
+that matters.
 
-### When GitHub-hosted is enough — which is most of the time
+**When GitHub-hosted is enough — most of the time.** Your code lints and validates on a
+standard image and you're not blocked by network or compliance. Use GitHub-hosted and move on.
 
-Your code lints and validates on a standard image; you're not blocked by network or
-compliance; you don't need local hardware. Use GitHub-hosted runners and move on.
+**When you need self-hosted.** The big one for Ignition is **network isolation**: the gateway
+you deploy to sits behind a firewall (on-prem, a customer VPN, a private PLC network) that a
+GitHub-hosted runner can't reach. (Also: compliance / data residency, real hardware, and cost
+at very high volume.)
 
-### When self-hosted is required
+**The one rule to remember.** A self-hosted runner executes arbitrary workflow code on a
+machine inside your network. *Never* attach one to a **public** repo that accepts **fork PRs**
+— a malicious PR can run code on your network. Use *ephemeral* runners and trusted repos.
 
-1. **Network isolation** — the thing you deploy to is behind a firewall (an on-prem
-   Ignition gateway, a PLC network, a private database). GitHub-hosted runners can't reach it.
-2. **Compliance / data residency** — builds must run on infrastructure your org controls.
-3. **Real hardware** — a physical PLC, a USB device, a specific OS.
-4. **Cost at very high volume** — occasionally, rarely for small teams.
-
-### The security model (the part that matters most)
-
-A runner machine has full access to whatever it can reach on its network. Connect a
-self-hosted runner to a **public** repo with **fork PRs** enabled and a malicious PR can
-execute arbitrary code *on your network* by adding a step to the workflow.
-
-> **Rule:** never connect a self-hosted runner to a public repo with fork PRs. If you must,
-> use *ephemeral* runners that self-destruct after each job, and require approval for
-> first-time contributors.
-
-The architecture is poll-based: the runner is a lightweight agent that **polls** GitHub for
-assigned jobs, runs them, and returns logs. There is no inbound connection from GitHub to
-your network — only outbound polling.
-
-### Instructor demo
-
-The instructor registers an ephemeral Docker-based runner and routes one job to it:
+**Short demo (instructor).** Register an ephemeral Docker runner, route one job to it, watch
+it run locally:
 
 ```bash
-# 1. Registration token (short-lived — regenerate if it expires)
+# short-lived registration token
 export RUNNER_TOKEN="$(gh api -X POST \
   "repos/<user>/<repo>/actions/runners/registration-token" --jq .token)"
 
-# 2. Start an ephemeral runner labelled self-hosted,local-lab03
 docker run -d --rm --name lab03-runner \
   -e REPO_URL="https://github.com/<user>/<repo>" \
-  -e RUNNER_NAME="lab03-$(whoami)" \
   -e RUNNER_TOKEN="$RUNNER_TOKEN" \
   -e LABELS="self-hosted,local-lab03" \
   -e EPHEMERAL=true \
@@ -316,29 +306,15 @@ docker run -d --rm --name lab03-runner \
 docker logs -f lab03-runner          # watch for "Listening for Jobs"
 ```
 
-Then a one-step workflow targeting it (`runs-on: [self-hosted, local-lab03]`), triggered
-with `gh workflow run`, and the job executing live in `docker logs`. Note what's *different*
-from GitHub-hosted: the runner has only what you put on it (e.g. no preinstalled
-`shellcheck`).
+A one-step workflow with `runs-on: [self-hosted, local-lab03]`, triggered via `gh workflow
+run`, then executes live in `docker logs`. Note the runner only has what you put on it (no
+preinstalled `shellcheck`, for instance). The full how-to — registering, routing, and cleaning
+up — is in [`docs/self-hosted-runners.md`](../docs/self-hosted-runners.md), and you'll do it
+for real in Lab 04.
 
-### Discussion
-
-- Looking at your own work: which of your deploys would *require* a self-hosted runner today?
-  Push for specifics — "our gateway is behind the customer's VPN; GitHub-hosted physically
-  can't reach it" beats "maybe."
-- What guardrails would you put on a production runner? (Ephemeral lifecycle; repo-scope only;
-  network-isolated; short-lived tokens over OIDC, not stored secrets; restricted PR triggers.)
-- For an Ignition shop, where does the runner sit — on the gateway server, or a separate
-  build host? What does each imply about access? (We come back to this in Lab 05.)
-
-### Optional take-home — full hands-on
-
-Register your own runner with a unique label (`solo`), route the `validate` job to it
-(`runs-on: [self-hosted, solo]`), confirm it runs locally, then **clean up**: revert the
-workflow, `docker stop` the runner, confirm it's offline in *Settings → Actions → Runners*,
-and **revoke the PAT**. A lingering runner or token is a real security smell, not a
-procedural detail. Full steps are in [`docs/self-hosted-runners.md`](../docs/self-hosted-runners.md)
-and the lab key.
+**Discussion.** Which of *your own* deploys would need a self-hosted runner — and why,
+specifically? ("Our gateway is behind the customer's VPN; GitHub-hosted physically can't reach
+it" beats "maybe.")
 
 ---
 
@@ -354,7 +330,7 @@ You built a CI safety net for an Ignition project, end to end:
 - **An understanding of self-hosted runners** — when they're worth it, and the security
   weight they carry.
 
-**Take-home (optional):** complete the self-hosted runner hands-on above.
+**Before Lab 04:** skim [`docs/self-hosted-runners.md`](../docs/self-hosted-runners.md) — you'll register a real runner there.
 
 **What's next:** Lab 04 opens up the Ignition file structure itself — `project.json`, view
 exports, and how to deploy project files to a gateway properly — building on the CI

@@ -67,7 +67,7 @@ The whole lab is one continuous workshop in [`exercises/lab.md`](./exercises/lab
 |---|---|
 | 1 | Linters as your safety net (yamllint, shellcheck, actionlint, **ign-lint**, `validate.sh`) |
 | 2 | GitHub Actions: workflows, jobs, required checks |
-| 3 | Self-hosted runners: when, why, how (demo + discussion) |
+| 3 | Self-hosted runners — a look ahead (short demo) |
 
 Part 1 starts from a deliberately-broken state seeded by [`ops/seed.sh`](./ops/seed.sh); the
 answer key is in [`instructor-notes/lab-key.md`](./instructor-notes/lab-key.md).

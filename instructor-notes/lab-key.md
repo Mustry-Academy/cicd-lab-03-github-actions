@@ -12,15 +12,16 @@ Covers all three parts of the workshop: linters, GitHub Actions, self-hosted run
 ### The seeded broken state
 
 The shipped `main` is **clean** — no planted issues, and `lab-project` passes ign-lint with
-**zero** findings. The broken state is produced by **`ops/seed.sh`**, which plants six
-issues into the working tree (no git tags, no branches — just run the script). Participants
+**zero** findings. The broken state is produced by **`ops/seed.sh`**, which plants the issues
+below into the working tree (no git tags, no branches — just run the script). Participants
 reset with `git restore . && rm -f .github/workflows/example.yml`.
 
 The Overview view lives at
 `projects/lab-project/com.inductiveautomation.perspective/views/pages/overview/view.json`;
-the script libraries at `projects/lab-project/ignition/script-python/lab/{display,util}/code.py`.
+the project metadata at `projects/lab-project/project.json`; the script libraries at
+`projects/lab-project/ignition/script-python/lab/{display,util}/code.py`.
 
-### The six planted issues
+### The planted issues
 
 **1. `docker-compose.yml` — yamllint (trailing whitespace).** `seed.sh` appends trailing
 spaces to the `container_name: lab03-ignition` line. yamllint flags `trailing-spaces`.
@@ -33,7 +34,8 @@ URL: `"$URL/data/api/v1/scan/projects"` → `$URL/data/api/v1/scan/projects`. sh
 `SC2086` ("Double quote to prevent globbing and word splitting").
 **Fix:** re-quote it — `"$URL/data/api/v1/scan/projects"`.
 
-**3. `.github/workflows/example.yml` — actionlint.** `seed.sh` writes a throwaway workflow:
+**3. `.github/workflows/example.yml` — actionlint (deprecated action).** `seed.sh` writes a
+throwaway workflow that pins a stale action:
 
 ```yaml
 name: Example workflow
@@ -43,32 +45,47 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: echo "${{ env.MISSING_VAR }}"
+      - run: echo "hello"
 ```
 
-actionlint flags `actions/checkout@v2` as too old (should be `@v4`); `env.MISSING_VAR` is
-referenced but never defined.
-**Fix:** either fix it (`actions/checkout@v4`, define the env var) or **delete the file** —
-acceptable, example workflows aren't required.
+actionlint flags `actions/checkout@v2` as too old to run on GitHub Actions.
+**Fix:** bump it to `actions/checkout@v4`, or **delete the file** — acceptable, example
+workflows aren't required.
 
-**4. Overview `view.json` — ign-lint `NamePatternRule` (snake_case component).** `seed.sh`
-renames the system-status label `SystemPill` → `system_pill`. `NamePatternRule` requires
-components to be PascalCase and reports an **error** (the root container `root` is exempt).
+**4. Overview `view.json` — ign-lint brittle + dangling component reference (the headline
+finding).** `seed.sh` re-points the **Discharge** tile's value away from its clean
+`runScript('lab.display.format_reading', …)` binding and at a *sibling tile by a brittle
+relative path* — to a component that no longer exists:
+
+```
+{../../SuctionPressure.Value.props.text}
+```
+
+This is the classic "someone renamed a component and a binding silently broke" bug, and it
+trips **two** rules at once:
+- `BadComponentReferenceRule` (error) — the `../` traversal couples this binding to the
+  view's structure; reorganise the tree and it breaks.
+- `ComponentReferenceValidationRule` (error) — `SuctionPressure` doesn't resolve to a real
+  component (it was renamed to `Suction`).
+
 Run: `ign-lint --config rule_config.json --files "projects/**/view.json"`.
-**Fix:** rename it back to `SystemPill`. It's a `meta.name` change in the JSON — if a
-component is referenced by name elsewhere, those references must match.
+**Fix:** restore a real data binding (the original `runScript('lab.display.format_reading', 0,
+-6.5, '°C')`). Teaching point: don't reach across the component tree by relative path — bind
+to a real data source, a `view.custom` property, or message handling.
 
-**5. Overview `view.json` — ign-lint `PollingIntervalRule` (poll faster than the floor).**
-`seed.sh` changes the Clock binding `now(1000)` → `now(250)`. `rule_config.json` sets
-`minimum_interval = 1000` (ms), so a 250 ms poll is under the floor.
+**5. Overview `view.json` — ign-lint `PollingIntervalRule` (runaway poll).** `seed.sh`
+changes the Clock binding `now(1000)` → `now(250)`. `rule_config.json` sets
+`minimum_interval = 1000` (ms), so a 250 ms poll (4×/second) is under the floor.
 **Fix:** restore `now(1000)` (or slower). Teaching point: fast polls multiply across a
 deployed HMI and hammer the gateway.
 
-**6. `lab/display/code.py` — `ops/validate.sh` (Jython-2 print statement).** `seed.sh`
-appends a `_debug` function containing `print "reading:", value` — the Python-2 statement
-form. `ops/validate.sh` parses every `code.py` as Python 3, so this fails to parse and the
-script exits 1 (the red PR signal).
-**Fix:** make it a call (`print("reading:", value)`) or remove the debug function.
+**6. `project.json` — `ops/validate.sh` (malformed JSON).** `seed.sh` leaves a **trailing
+comma** after the last property in `project.json` (`"parent": ""` → `"parent": "",`) — exactly
+the slip a hand-edit of a tracked resource produces. `ops/validate.sh` runs `json.load` over
+every `*.json` under `projects/`, so it fails to parse and the script exits 1 (the red PR
+signal). (`validate.sh` also parses every `code.py` as Python 3, so a genuine script syntax
+error fails it the same way.)
+**Fix:** remove the trailing comma so `project.json` is valid JSON again.
 
 ### Config sub-task: `.yamllint.yml` comment
 
@@ -80,9 +97,9 @@ readability more than it helps.
 ### Clean end state
 
 After Part 1: trailing whitespace stripped; `ops/scan.sh` variable re-quoted; `example.yml`
-fixed or deleted; the component renamed back to `SystemPill` and the Clock restored to
-`now(1000)`; the `print` statement converted to a call; the `.yamllint.yml` comment extended.
-Every linter silent and `ops/validate.sh` exits 0.
+fixed or deleted; the Discharge binding restored to its `runScript(...)` data source and the
+Clock restored to `now(1000)`; the trailing comma removed from `project.json`; the
+`.yamllint.yml` comment extended. Every linter silent and `ops/validate.sh` exits 0.
 
 ### Grading
 
@@ -90,18 +107,19 @@ Every linter silent and `ops/validate.sh` exits 0.
   output and `ops/validate.sh` exits 0 on the final state.
 - **Justified config changes.** If they disabled a `yamllint`/`ign-lint` rule, the commit
   message or config comment should explain why.
-- **No "fixed by deleting it" cheats.** Deleting the Clock binding or stripping the component
-  to silence ign-lint is wrong — the component and its poll are legitimate; only the *name*
-  and *interval* were broken. Removing `example.yml` is fine (it was optional).
-- **The view still loads.** Renaming a component is a `view.json` edit — confirm they didn't
-  break the JSON or orphan a reference.
+- **No "fixed by deleting it" cheats.** Deleting the Clock or Discharge binding to silence
+  ign-lint is wrong — restore them to real data bindings; only the *reference* and the *poll
+  rate* were broken, not the components. Removing `example.yml` is fine (it was optional).
+- **The view still loads.** Editing a binding is a `view.json` edit — confirm they didn't
+  break the JSON or leave a dangling reference.
 
 ### Stretch — pre-commit
 
 `.pre-commit-config.yaml` wires yamllint, shellcheck, actionlint, and ign-lint. A participant
-who completes the stretch can `pre-commit install`, make a bad change (rename a component to
-snake_case), and watch the commit get blocked by ign-lint's `NamePatternRule`. If the commit
-succeeds anyway: did they run `pre-commit install`? Is `.git/hooks/pre-commit` populated?
+who completes the stretch can `pre-commit install`, make a bad change (e.g. set a binding to
+`now(250)`, or point one at a non-existent sibling), and watch the commit get blocked by
+ign-lint. If the commit succeeds anyway: did they run `pre-commit install`? Is
+`.git/hooks/pre-commit` populated?
 
 ### Debrief crib
 
