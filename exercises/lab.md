@@ -40,6 +40,13 @@ brew install yamllint shellcheck actionlint
 pip install yamllint==1.35.1 ign-lint==0.6.1     # ign-lint needs Python 3.10+
 ```
 
+> **About `ign-lint`:** it's the one Ignition-specific tool here — a young, pre-1.0 linter
+> (v0.6.1) from [BW Design Group](https://github.com/bw-design-group)
+> ([ignition-lint repo](https://github.com/bw-design-group/ignition-lint)). It's the best
+> Ignition-native linter going today, which is why we use it; pin the version and treat it as
+> a great example of the *pattern* — an Ignition-aware linter as a required CI check — rather
+> than a permanent dependency.
+
 ### Your own repo (needed for Part 2)
 
 Part 2 has you open pull requests and set a *required status check* on `main` — both need

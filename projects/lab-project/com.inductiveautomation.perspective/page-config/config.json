@@ -1,11 +1,11 @@
 {
   "pages": {
     "/": {
-      "title": "Lab 02",
+      "title": "Lab 03",
       "viewPath": "pages/overview"
     },
     "/overview": {
-      "title": "Lab 02",
+      "title": "Lab 03",
       "viewPath": "pages/overview"
     }
   },

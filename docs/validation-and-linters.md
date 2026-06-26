@@ -40,6 +40,14 @@ The other tools are generic. `ign-lint` is the one that actually understands Ign
 - **Run:** `ign-lint --config rule_config.json --files "projects/**/view.json"`
 - **Repo:** <https://github.com/bw-design-group/ignition-lint>
 - **Docs:** <https://bw-design-group.github.io/ignition-lint>
+- **Maintainer:** [BW Design Group](https://github.com/bw-design-group)
+
+> **A note on maturity.** `ign-lint` is pre-1.0 (v0.6.1) and maintained by a single systems
+> integrator. That's not a knock — it's genuinely the best Ignition-native linter available,
+> and the reason this lab leans on it. But pin the version (the rule schema and CLI can still
+> change between releases), and treat what you're learning as the durable part: the *pattern*
+> of an Ignition-aware linter running as a required CI check. The specific tool may evolve or
+> be replaced; the practice won't.
 
 It's configured by a repo-root `rule_config.json`, which is tuned so this lab's clean `lab-project` passes with zero findings. Built-in rules worth knowing:
 
