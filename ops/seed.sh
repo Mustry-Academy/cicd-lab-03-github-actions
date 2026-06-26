@@ -2,14 +2,12 @@
 # Seed Part 1's deliberately-broken state into the working tree.
 #
 # Run this once at the start of Part 1, then hunt the planted issues with the
-# linters (yamllint, shellcheck, actionlint, ign-lint, ops/validate.sh). There
-# are SIX issues — one per tool, plus a second ign-lint finding.
+# linters (yamllint, shellcheck, actionlint, ign-lint, ops/validate.sh). Every
+# planted issue is a mistake a real Ignition project picks up — a brittle binding,
+# a runaway poll rate, a hand-edited resource with broken JSON, and so on.
 #
 # Reset back to a clean tree at any time with:
 #   git restore . && rm -f .github/workflows/example.yml
-#
-# Idempotent-ish: re-running won't stack duplicates for most issues, but the
-# cleanest reset is the git command above.
 
 set -euo pipefail
 
@@ -39,23 +37,26 @@ s = s.replace('"$URL/data/api/v1/scan/projects"',
               '$URL/data/api/v1/scan/projects', 1)
 p.write_text(s)
 
-# 4 + 5. ign-lint — a snake_case component name and a sub-floor poll, both in the view
+# 4 + 5. ign-lint — a brittle/dangling component reference and a runaway poll, both in the view
 view = pathlib.Path(
     "projects/lab-project/com.inductiveautomation.perspective/views/pages/overview/view.json")
 s = view.read_text()
-s = s.replace('"name": "SystemPill"', '"name": "system_pill"', 1)   # NamePatternRule
-s = s.replace("now(1000)", "now(250)", 1)                           # PollingIntervalRule
+# The Discharge tile's value used a clean runScript binding. Re-point it at a sibling
+# tile by a brittle *relative path* — to a component that no longer exists (someone
+# renamed "SuctionPressure" to "Suction"). This is the classic "renamed a component and
+# a binding silently broke" bug: it trips BOTH BadComponentReferenceRule (brittle '../'
+# traversal) AND ComponentReferenceValidationRule (the target doesn't resolve).
+s = s.replace("runScript('lab.display.format_reading', 0, -6.5, '°C')",
+              "{../../SuctionPressure.Value.props.text}", 1)
+# The Clock polls four times a second instead of once — PollingIntervalRule.
+s = s.replace("now(1000)", "now(250)", 1)
 view.write_text(s)
 
-# 6. ops/validate.sh — a Jython-2 print statement that fails Python-3 parsing
-code = pathlib.Path(
-    "projects/lab-project/ignition/script-python/lab/display/code.py")
-s = code.read_text().rstrip() + (
-    "\n\n\n"
-    "def _debug(value):\n"
-    '    print "reading:", value   # Jython-2 statement form; not valid Python 3\n'
-)
-code.write_text(s)
+# 6. ops/validate.sh — malformed JSON: a trailing comma left in project.json by a hand-edit
+p = pathlib.Path("projects/lab-project/project.json")
+s = p.read_text()
+s = s.replace('"parent": ""', '"parent": "",', 1)   # trailing comma → invalid JSON
+p.write_text(s)
 PY
 
 # 3. actionlint — a workflow using a deprecated action + an undefined env var
@@ -68,17 +69,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: echo "${{ env.MISSING_VAR }}"
+      - run: echo "hello"
 YML
 
 cat <<'EOF'
-Seeded 6 issues into the working tree:
-  1. docker-compose.yml              — yamllint   (trailing whitespace)
-  2. ops/scan.sh                     — shellcheck (SC2086, unquoted variable)
-  3. .github/workflows/example.yml   — actionlint (deprecated checkout@v2 + undefined env)
-  4. overview/view.json              — ign-lint   (NamePatternRule: snake_case component)
-  5. overview/view.json              — ign-lint   (PollingIntervalRule: poll faster than 1000ms)
-  6. lab/display/code.py             — validate.sh (Jython-2 print statement)
+Seeded issues into the working tree:
+  1. docker-compose.yml              — yamllint    (trailing whitespace)
+  2. ops/scan.sh                     — shellcheck  (SC2086, unquoted variable)
+  3. .github/workflows/example.yml   — actionlint  (deprecated actions/checkout@v2)
+  4. overview/view.json (Discharge)  — ign-lint    (brittle + dangling component reference)
+  5. overview/view.json (Clock)      — ign-lint    (poll faster than the 1000ms floor)
+  6. project.json                    — validate.sh (malformed JSON: trailing comma)
 
 Find them with the linters. When you're done, reset to a clean tree with:
   git restore . && rm -f .github/workflows/example.yml

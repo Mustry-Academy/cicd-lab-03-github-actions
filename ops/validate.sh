@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Lab 02 validation — the green/red signal for your pull request.
+# Lab 03 validation — the green/red signal for your pull request.
 #
 # Gateway-free: it only reads the project files on disk, so it runs in a second
 # with no Ignition gateway, no Docker, nothing but Python 3. It mirrors the

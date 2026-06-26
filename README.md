@@ -1,6 +1,6 @@
 # Lab 03 — GitHub Actions
 
-Day 2 of the [CI/CD for Ignition Masterclass](https://github.com/mustry-academy/cicd-masterclass) — a single ~3-hour workshop.
+Day 2 of the [CI/CD for Ignition Masterclass](https://github.com/mustry-academy/cicd-masterclass) — a single hands-on workshop.
 
 > Build a CI safety net around a real Ignition project: run linters that catch problems before they ship, write GitHub Actions workflows from scratch, and understand when to reach for self-hosted runners.
 
@@ -63,11 +63,11 @@ ops/teardown.sh --volumes   # stop and wipe gateway state for a fresh start
 
 The whole lab is one continuous workshop in [`exercises/lab.md`](./exercises/lab.md):
 
-| Part | Topic | ~Time |
-|---|---|---|
-| 1 | Linters as your safety net (yamllint, shellcheck, actionlint, **ign-lint**, `validate.sh`) | 60 min |
-| 2 | GitHub Actions: workflows, jobs, required checks | 75 min |
-| 3 | Self-hosted runners: when, why, how (demo + discussion) | 30 min |
+| Part | Topic |
+|---|---|
+| 1 | Linters as your safety net (yamllint, shellcheck, actionlint, **ign-lint**, `validate.sh`) |
+| 2 | GitHub Actions: workflows, jobs, required checks |
+| 3 | Self-hosted runners — a look ahead (short demo) |
 
 Part 1 starts from a deliberately-broken state seeded by [`ops/seed.sh`](./ops/seed.sh); the
 answer key is in [`instructor-notes/lab-key.md`](./instructor-notes/lab-key.md).
