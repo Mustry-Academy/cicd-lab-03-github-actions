@@ -105,6 +105,7 @@ body{
 .code pre{font-family:'IBM Plex Mono';font-size:14px;color:#dbe6f5;line-height:1.7}
 .code .cm{color:#7d93ad}
 .code .cmd2{color:var(--peri2)}
+.code .bad{color:#ef6f6f}
 
 /* goal / objective banner */
 .goal{display:flex;gap:14px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--blue);border-radius:14px;padding:16px 20px;box-shadow:var(--shadow);margin-top:auto}
@@ -166,7 +167,7 @@ body{
   <div class="cover">
     <div class="eyebrow">The assignment · breakout rooms · 60 min</div>
     <div class="big">Hunt the bugs, then <em>automate the hunt</em>.</div>
-    <div class="sub">Six realistic bugs are planted in the Ignition project: a brittle binding, a runaway poll, broken JSON, and friends. First you hunt them down with the linters. Then you make sure nobody ever has to hunt by hand again: a GitHub Actions workflow in <em style="color:#fff;font-style:normal">your own repo</em>, ending in a required check that blocks a red PR.</div>
+    <div class="sub">Six realistic bugs are planted in the Ignition project: a brittle binding, a runaway poll, broken JSON, and friends. First you hunt them down with the linters. Then you make sure nobody ever has to hunt by hand again: a GitHub Actions workflow in <em style="color:#fff;font-style:normal">your own repo</em>, ending in branch protection on <span class="mono" style="color:#dbe4f0">main</span> that rejects direct pushes and blocks a red PR.</div>
     <div class="for">
       <span>Floating to help</span>
       <span class="pill"><b>Sam</b></span>
@@ -330,7 +331,7 @@ scripts/validate.sh</pre></div>
         </div>
         <div class="goal" style="margin-top:18px">
           <span class="badge">Debrief fuel</span>
-          <p>Which of these linters would have caught <b>your team's most recent real bug</b>? Note it down; we'll ask.</p>
+          <p>Which of these linters would have caught <b>your team's most recent real bug</b>?</p>
         </div>
       </div>
     </div>
@@ -357,7 +358,7 @@ jobs:
              <span class="cm">#   yamllint · actionlint · shellcheck · ign-lint</span></pre></div>
     <ul class="checks" style="margin-top:22px;max-width:900px">
       <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span><span><b>Steps 1-2:</b> path filters + compose validation.</span></li>
-      <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span><span><b>Steps 3-4:</b> status badge + the <b>required check</b> that blocks a red PR.</span></li>
+      <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span><span><b>Steps 3-4:</b> status badge + <b>branch protection on <span class="mono" style="color:#dbe4f0">main</span></b>: direct pushes rejected, red PRs blocked.</span></li>
       <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span><span><b>Step 5:</b> sanity check against the shipped <span class="mono" style="color:#dbe4f0">.github/workflows/ci.yml</span>.</span></li>
     </ul>
   </div>
@@ -410,26 +411,35 @@ jobs:
     <div class="stage">Part 2 · steps 3-5 · the gate</div>
   </div>
   <div class="body">
-    <div class="sechead"><span class="num phase2">PART 2 · 3-5</span><div><div class="title">Badge, required check, then watch it block</div></div></div>
+    <div class="sechead"><span class="num phase2">PART 2 · 3-5</span><div><div class="title">Badge, protect <span class="mono" style="font-size:30px">main</span>, then try to break in</div></div></div>
     <div class="cols2">
       <div class="steps">
-        <div class="step"><div class="ix p">3</div><div class="tx"><b>Status badge</b> at the top of <span class="inlinecode">README.md</span> (see block): green at a glance.</div></div>
-        <div class="step"><div class="ix p">4</div><div class="tx"><b>Branch protection on <span class="inlinecode">main</span></b>: require a PR before merging, require status checks → select <b><span class="inlinecode">lint</span></b> and <b><span class="inlinecode">validate</span></b>.</div></div>
-        <div class="step"><div class="ix p">4</div><div class="tx"><b>Now break it on purpose:</b> re-run <span class="inlinecode">scripts/seed.sh</span> (or just set the Clock to <span class="inlinecode">now(250)</span> by hand), commit, open a PR → <b>confirm GitHub blocks the merge</b>. Fix, re-push, watch it go green.</div></div>
+        <div class="step"><div class="ix p">3</div><div class="tx"><b>Status badge</b> at the top of <span class="inlinecode">README.md</span>: green at a glance. Copy the markdown line from <span class="inlinecode">lab.md</span> step 3.</div></div>
+        <div class="step"><div class="ix p">4</div><div class="tx"><b>Protect <span class="inlinecode">main</span></b>: Settings → Branches → add a rule with the <b>four ticks</b> in the block. Grant <b>no bypass</b>: it's your repo, and a wall you can step over teaches you nothing.</div></div>
+        <div class="step"><div class="ix p">4</div><div class="tx"><b>Try the forbidden route:</b> commit straight to <span class="inlinecode">main</span> and push (see block). <b>GitHub rejects the push.</b> Direct commits to <span class="inlinecode">main</span> are dead.</div></div>
+        <div class="step"><div class="ix p">4</div><div class="tx"><b>Now the proper route:</b> the same change on a branch, open a PR, wait for <b><span class="inlinecode">lint</span></b> and <b><span class="inlinecode">validate</span></b> to go green, merge. The merge button is now the only door in.</div></div>
+        <div class="step"><div class="ix p">4</div><div class="tx"><b>Break it on purpose:</b> re-run <span class="inlinecode">scripts/seed.sh</span> (or just set the Clock to <span class="inlinecode">now(250)</span> by hand), commit on a branch, open a PR → <b>confirm GitHub blocks the merge</b>. Fix, re-push, watch it go green.</div></div>
         <div class="step"><div class="ix p">5</div><div class="tx"><b>Sanity check:</b> your workflow should structurally match the shipped <span class="inlinecode">.github/workflows/ci.yml</span>. Reference end state in <span class="inlinecode">instructor-notes/lab-key.md</span>.</div></div>
       </div>
       <div>
-        <div class="code"><pre><span class="cm"># 3: badge (swap in your repo path)</span>
-[![CI](https://github.com/&lt;you&gt;/cicd-lab-03-github-actions/actions/workflows/ci.yml/badge.svg)](…/ci.yml)
+        <div class="code"><pre><span class="cm"># 4: the rule on main (Settings → Branches)</span>
+[✓] Require a pull request before merging  <span class="cm"># no direct commits</span>
+[✓] Require status checks to pass          <span class="cm"># select lint + validate</span>
+[✓] Block force pushes                     <span class="cm"># no rewriting history</span>
+[✓] Restrict deletions                     <span class="cm"># main can't be deleted</span>
 
-<span class="cm"># 4: plant a failure, then:</span>
-git switch -c break/ci-demo
-git commit -am <span class="cmd2">"break: seed CI failure"</span>
-git push -u origin break/ci-demo
-gh pr create --fill    <span class="cm"># → merge button: blocked ✗</span></pre></div>
+<span class="cm"># the forbidden route: watch it bounce</span>
+git switch main
+git commit --allow-empty -m <span class="cmd2">"test: direct to main"</span>
+git push                     <span class="bad"># → rejected: protected branch</span>
+
+<span class="cm"># the proper route: branch → PR → green → merge</span>
+git switch -c fix/proper-route
+git push -u origin fix/proper-route
+gh pr create --fill</pre></div>
         <div class="goal good-g" style="margin-top:16px">
           <span class="badge">✅ The moment</span>
-          <p>This is the whole lab in one screenshot: a red check and a <b>disabled merge button</b>. "Please run the linters" just became "<b>you cannot merge</b>."</p>
+          <p>The whole lab in two screenshots: a direct push <b>rejected at the command line</b>, and a red PR with a <b>disabled merge button</b>. "Please run the linters" just became "<b>you cannot merge</b>."</p>
         </div>
       </div>
     </div>
@@ -546,7 +556,7 @@ git commit -am <span class="cmd2">"test: should be blocked"</span>
     <div class="title" style="color:#fff;max-width:24ch">The safety net is no longer a promise. It's a setting.</div>
     <ul class="checks" style="max-width:940px;margin-top:22px">
       <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span><span>You hunted <b>six planted bugs</b> with five tools, and can now say which linter catches which class of bug, including the Ignition-specific ones.</span></li>
-      <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span><span>Your repo runs a <b>two-job workflow</b> with least-privilege permissions, path filters and a badge, plus a <b>required check</b> that physically blocked a red PR.</span></li>
+      <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span><span>Your repo runs a <b>two-job workflow</b> with least-privilege permissions, path filters and a badge, plus <b>branch protection on <span class="mono" style="color:#dbe4f0">main</span></b> that rejected your direct push and physically blocked a red PR.</span></li>
       <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span><span>Bring to the wrap-up: <b>which linter would have caught your team's last real bug</b>, and one ign-lint rule you'd call overreach.</span></li>
     </ul>
     <div class="goal" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.14);border-left-color:var(--peri2)">
