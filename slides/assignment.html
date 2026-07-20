@@ -103,6 +103,13 @@ body{
 
 /* code block */
 .code{background:var(--navy);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow);margin-top:6px;overflow:auto}
+/* OS tabs on top of a code block */
+.ostabs{display:flex;gap:5px;margin-top:6px}
+.ostab{font-family:'IBM Plex Mono';font-size:11.5px;font-weight:600;letter-spacing:.4px;color:var(--txt-faint);background:var(--line);border:none;border-radius:9px 9px 0 0;padding:8px 16px 7px;cursor:pointer}
+.ostab.active{color:#fff;background:var(--navy)}
+.ostabs+.code,.ostabs~.code.ospane{border-top-left-radius:0;margin-top:0}
+.code.ospane{display:none}
+.code.ospane.active{display:block}
 .code pre{font-family:'IBM Plex Mono';font-size:14px;color:#dbe6f5;line-height:1.7}
 .code .cm{color:#7d93ad}
 .code .cmd2{color:var(--peri2)}
@@ -295,7 +302,11 @@ code .
         <div class="step"><div class="ix t">3</div><div class="tx"><b>Reference reading (optional)</b> lives in <span class="inlinecode">docs/validation-and-linters.md</span> and <span class="inlinecode">docs/self-hosted-runners.md</span>: cheat sheets, not homework.</div></div>
       </div>
       <div>
-        <div class="code"><pre><span class="cm"># 2: linters — Debian/Ubuntu/WSL</span>
+        <div class="ostabs" data-ostabs>
+          <button class="ostab" data-os="linux" type="button">Linux / WSL</button>
+          <button class="ostab" data-os="mac" type="button">macOS</button>
+        </div>
+        <div class="code ospane" data-os="linux"><pre><span class="cm"># 2: linters — Debian/Ubuntu/WSL</span>
 sudo apt update
 sudo apt install shellcheck python3-venv python3-pip
 <span class="cm">#    actionlint has no apt package: release binary →</span>
@@ -308,6 +319,17 @@ sudo apt update &amp;&amp; sudo apt install python3.13 python3.13-venv
 <span class="cm"># 2c: venv on that Python, then the pinned tools</span>
 python3.13 -m venv .venv &amp;&amp; source .venv/bin/activate
 python --version        <span class="cm"># verify it's 3.13 inside the venv</span>
+pip install --upgrade pip
+pip install yamllint==1.35.1 ign-lint==0.6.1</pre></div>
+        <div class="code ospane" data-os="mac"><pre><span class="cm"># 2: linters — macOS (Homebrew)</span>
+brew install shellcheck actionlint python@3.12
+
+<span class="cm"># 2b: macOS's bare python3 is 3.9 — too old for ign-lint</span>
+<span class="cm">#     (needs >=3.10,&lt;3.14), so name brew's python3.12 explicitly</span>
+
+<span class="cm"># 2c: venv on that Python, then the pinned tools</span>
+python3.12 -m venv .venv &amp;&amp; source .venv/bin/activate
+python --version        <span class="cm"># verify it's 3.12 inside the venv</span>
 pip install --upgrade pip
 pip install yamllint==1.35.1 ign-lint==0.6.1</pre></div>
         <div class="goal warn-g" style="margin-top:18px">
@@ -828,6 +850,20 @@ window.addEventListener('keydown',e=>{
   if(e.key==='Home'){deck.scrollTo({top:0})}
   if(e.key==='End'){deck.scrollTo({top:slides.length*window.innerHeight})}
 });
+// OS tabs on code blocks: default to macOS on a Mac, Linux everywhere else
+// (Windows students run the lab in WSL, so Windows also gets the Linux tab).
+(function osTabs(){
+  const isMac=/Mac/i.test(navigator.platform||navigator.userAgent);
+  document.querySelectorAll('[data-ostabs]').forEach(bar=>{
+    const scope=bar.parentElement;
+    const show=os=>{
+      bar.querySelectorAll('.ostab').forEach(b=>b.classList.toggle('active',b.dataset.os===os));
+      scope.querySelectorAll('.ospane').forEach(p=>p.classList.toggle('active',p.dataset.os===os));
+    };
+    bar.querySelectorAll('.ostab').forEach(b=>b.addEventListener('click',()=>show(b.dataset.os)));
+    show(isMac?'mac':'linux');
+  });
+})();
 update();
 setTimeout(()=>{hint.style.transition='opacity .6s';hint.style.opacity='0'},4200);
 </script>
