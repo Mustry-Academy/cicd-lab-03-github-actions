@@ -366,7 +366,7 @@ docker compose restart
 <span class="cm"># run all five checks · note every finding + its file</span>
 yamllint -c .yamllint.yml . <span class="cm"># YAML style + syntax</span>
 shellcheck scripts/*.sh     <span class="cm"># shell-script bugs</span>
-actionlint                  <span class="cm"># Actions workflows</span>
+actionlint                  <span class="cm"># Actions workflows · actions must be @v4</span>
 <span class="cm"># ign-lint — Perspective views, the one to linger on:</span>
 ign-lint --config rule_config.json \
   --files <span class="cmd2">"projects/**/view.json"</span>
