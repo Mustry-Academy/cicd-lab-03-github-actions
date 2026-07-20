@@ -448,10 +448,10 @@ scripts/validate.sh         <span class="cm"># JSON + code.py parses</span></pre
         <div class="step"><div class="ix p">0</div><div class="tx">Rather do it by hand? The script only runs the <span class="inlinecode">git mv</span> and writes the file below — skip it and type both yourself if you prefer.</div></div>
       </div>
       <div>
-        <div class="code"><pre><span class="cm"># prepare-part2.sh sets the shipped answer aside…</span>
-git mv .github/workflows/ci.yml .github/ci-reference.yml
+        <div class="code"><pre><span class="cm"># sets the shipped answer aside, scaffolds the skeleton</span>
+scripts/prepare-part2.sh
 
-<span class="cm"># …then scaffolds .github/workflows/ci.yml:</span>
+<span class="cm"># what it drops into .github/workflows/ci.yml:</span>
 name: CI
 on: [pull_request]            <span class="cm"># TODO 1: paths + push</span>
 permissions:
