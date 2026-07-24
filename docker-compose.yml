@@ -17,7 +17,7 @@
 
 services:
   ignition:
-    image: inductiveautomation/ignition:8.3.6
+    image: inductiveautomation/ignition:8.3.8
     container_name: lab03-ignition
     # Keep the image's own identity (uid 2003, gid 0): its data/ tree is
     # owned 2003:0 mode 775, so any OTHER primary gid loses write access and

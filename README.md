@@ -127,7 +127,7 @@ A single Ignition 8.3 gateway. Two things to understand about how it's wired:
 ```yaml
 services:
   ignition:
-    image: inductiveautomation/ignition:8.3.6
+    image: inductiveautomation/ignition:8.3.8
     ports: ["8088:8088"]
     volumes:
       - ignition-data:/usr/local/bin/ignition/data        # gateway-owned, self-generated, not in git
