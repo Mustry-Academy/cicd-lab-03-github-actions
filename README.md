@@ -19,7 +19,7 @@ never commit). How those project files are structured, and how to deploy them pr
 is the subject of [Lab 04](https://github.com/mustry-academy/cicd-lab-04-ignition-file-based-deploy).
 
 ## Prerequisites
-
+ 
 - Completed [Lab 02](https://github.com/mustry-academy/cicd-lab-02-branching-and-prs)
 - Pass [`cicd-preflight`](https://github.com/mustry-academy/cicd-preflight)
 - Docker (with the Compose V2 plugin) — ~1.5 GB RAM is plenty for the single gateway
