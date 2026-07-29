@@ -36,3 +36,4 @@ jobs:
       #                (pip install yamllint==1.35.1 ign-lint==0.6.1)
       # TODO: run each linter — yamllint, actionlint, shellcheck, ign-lint
       # TODO (step 2): add `docker compose config -q` as the final lint step
+      - run: docker compose config -q
