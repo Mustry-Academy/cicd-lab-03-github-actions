@@ -85,7 +85,7 @@ Part 1 starts from a deliberately-broken state seeded by [`scripts/seed.sh`](./s
 answer key is in [`instructor-notes/lab-key.md`](./instructor-notes/lab-key.md).
 
 ## Repo layout
- 
+  
 ```
 cicd-lab-03-github-actions/
 ├── README.md
