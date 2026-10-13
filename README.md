@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> **This repository has moved and is read-only.** The CI/CD for Ignition course now lives in one repo: [Mustry-Academy/cicd-for-ignition](https://github.com/Mustry-Academy/cicd-for-ignition), in [`labs/03-github-actions/`](https://github.com/Mustry-Academy/cicd-for-ignition/tree/main/labs/03-github-actions). This repo will be deleted after 14 December 2026.
+
 # Lab 03 — GitHub Actions
 
 Day 2 of the [CI/CD for Ignition Masterclass](https://github.com/mustry-academy/cicd-masterclass) — a single hands-on workshop.
